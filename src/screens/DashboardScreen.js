@@ -132,7 +132,10 @@ const DashboardScreen = () => {
   };
 
   const handleCasePress = (id) => {
-    router.push(`/case/${id}`);
+    router.push({
+      pathname: "/case/[id]",
+      params: { id },
+    });
   };
 
   const LawsuitCard = ({ lawsuit }) => (

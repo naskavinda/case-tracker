@@ -1,21 +1,20 @@
-import { Tabs } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
-import { PaperProvider } from 'react-native-paper';
+import { Tabs } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";
+import { PaperProvider } from "react-native-paper";
 
 export default function AppLayout() {
   return (
     <PaperProvider>
       <Tabs
         screenOptions={{
-          tabBarShowLabel: true,
           headerStyle: {
-            backgroundColor: '#007AFF',
+            backgroundColor: "#007AFF",
           },
-          headerTintColor: '#fff',
+          headerTintColor: "#fff",
           headerTitleStyle: {
-            fontWeight: 'bold',
+            fontWeight: "bold",
           },
-          tabBarActiveTintColor: '#007AFF',
+          tabBarActiveTintColor: "#007AFF",
           tabBarStyle: {
             height: 60,
             paddingBottom: 10,
@@ -26,21 +25,32 @@ export default function AppLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Add Case',
-            tabBarLabel: 'Add Case',
+            title: "Add Case",
+            tabBarLabel: "Add Case",
             tabBarIcon: ({ color, size }) => (
-              <MaterialIcons name="add-circle-outline" size={size} color={color} />
+              <MaterialIcons
+                name="add-circle-outline"
+                size={size}
+                color={color}
+              />
             ),
           }}
         />
         <Tabs.Screen
           name="dashboard"
           options={{
-            title: 'Dashboard',
-            tabBarLabel: 'Dashboard',
+            title: "Dashboard",
+            tabBarLabel: "Dashboard",
             tabBarIcon: ({ color, size }) => (
               <MaterialIcons name="dashboard" size={size} color={color} />
             ),
+          }}
+        />
+        <Tabs.Screen
+          name="case/[id]"
+          options={{
+            href: null,
+            headerShown: false,
           }}
         />
       </Tabs>
