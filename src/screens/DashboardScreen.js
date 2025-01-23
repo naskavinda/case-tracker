@@ -8,7 +8,8 @@ import {
   SectionList,
   RefreshControl,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import { LawsuitService } from '../services/LawsuitService';
 
 const StatusIndicator = ({ status }) => {
@@ -30,68 +31,32 @@ const StatusIndicator = ({ status }) => {
   );
 };
 
-const LawsuitCard = ({ lawsuit }) => {
-  const calculateStatus = () => {
-    const now = new Date();
-    const nextDate = new Date(lawsuit.nextDate);
-    
-    // Check if all actions are completed
-    const allActionsCompleted = lawsuit.actions.every(action => action.completed);
-    if (allActionsCompleted) return 'completed';
-
-    // Check if next date is overdue
-    if (nextDate < now) return 'overdue';
-
-    // Check if next date is within 7 days
-    const sevenDaysFromNow = new Date(now);
-    sevenDaysFromNow.setDate(now.getDate() + 7);
-    if (nextDate <= sevenDaysFromNow) return 'upcoming';
-
-    return 'upcoming';
-  };
-
-  return (
-    <View style={styles.card}>
-      <StatusIndicator status={calculateStatus()} />
-      <View style={styles.cardContent}>
-        <Text style={styles.lawsuitNumber}>Case #{lawsuit.lawsuitNumber}</Text>
-        <Text style={styles.nextDate}>
-          Next Date: {new Date(lawsuit.nextDate).toLocaleDateString()}
-        </Text>
-        <View style={styles.actionStatus}>
-          <Text style={styles.actionCount}>
-            Actions: {lawsuit.actions.filter(a => a.completed).length}/{lawsuit.actions.length}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-};
-
 const DashboardScreen = () => {
+  const router = useRouter();
   const [lawsuits, setLawsuits] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sections, setSections] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Refresh data when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      loadLawsuits();
-    }, [])
-  );
+  const loadLawsuits = () => {
+    try {
+      const allLawsuits = LawsuitService.getAllLawsuits();
+      setLawsuits(allLawsuits);
+      organizeLawsuits(allLawsuits);
+    } catch (error) {
+      console.error('Error loading lawsuits:', error);
+    }
+  };
+
+  React.useEffect(() => {
+    loadLawsuits();
+  }, []);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     loadLawsuits();
     setRefreshing(false);
   }, []);
-
-  const loadLawsuits = () => {
-    const allLawsuits = LawsuitService.getAllLawsuits();
-    setLawsuits(allLawsuits);
-    organizeLawsuits(allLawsuits);
-  };
 
   const organizeLawsuits = (lawsuitList) => {
     const now = new Date();
@@ -164,6 +129,49 @@ const DashboardScreen = () => {
     });
 
     organizeLawsuits(filtered);
+  };
+
+  const handleCasePress = (id) => {
+    router.push(`/case/${id}`);
+  };
+
+  const LawsuitCard = ({ lawsuit }) => (
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={() => handleCasePress(lawsuit.id)}
+    >
+      <StatusIndicator status={calculateStatus(lawsuit)} />
+      <View style={styles.cardContent}>
+        <Text style={styles.lawsuitNumber}>Case #{lawsuit.lawsuitNumber}</Text>
+        <Text style={styles.nextDate}>
+          Next Date: {new Date(lawsuit.nextDate).toLocaleDateString()}
+        </Text>
+        <View style={styles.actionStatus}>
+          <Text style={styles.actionCount}>
+            Actions: {lawsuit.actions.filter(a => a.completed).length}/{lawsuit.actions.length}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const calculateStatus = (lawsuit) => {
+    const now = new Date();
+    const nextDate = new Date(lawsuit.nextDate);
+    
+    // Check if all actions are completed
+    const allActionsCompleted = lawsuit.actions.every(action => action.completed);
+    if (allActionsCompleted) return 'completed';
+
+    // Check if next date is overdue
+    if (nextDate < now) return 'overdue';
+
+    // Check if next date is within 7 days
+    const sevenDaysFromNow = new Date(now);
+    sevenDaysFromNow.setDate(now.getDate() + 7);
+    if (nextDate <= sevenDaysFromNow) return 'upcoming';
+
+    return 'upcoming';
   };
 
   const renderSectionHeader = ({ section: { title } }) => (

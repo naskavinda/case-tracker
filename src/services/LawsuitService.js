@@ -20,7 +20,7 @@ const initialLawsuits = [
   {
     id: 2,
     lawsuitNumber: 'CASE-2025-002',
-    nextDate: new Date('2025-01-26'), // 2 days from now
+    nextDate: new Date('2025-01-26'),
     actions: [
       {
         actionId: '1',
@@ -28,7 +28,7 @@ const initialLawsuits = [
         createdAt: new Date('2025-01-24'),
       },
       {
-        actionId: '3',
+        actionId: '2',
         completed: false,
         createdAt: new Date('2025-01-24'),
       }
@@ -37,7 +37,7 @@ const initialLawsuits = [
   {
     id: 3,
     lawsuitNumber: 'CASE-2025-003',
-    nextDate: new Date('2025-03-15'), // Future date
+    nextDate: new Date('2025-03-15'), 
     actions: [
       {
         actionId: '2',
@@ -49,7 +49,7 @@ const initialLawsuits = [
   {
     id: 4,
     lawsuitNumber: 'CASE-2025-004',
-    nextDate: new Date('2025-01-25'), // Tomorrow
+    nextDate: new Date('2025-01-25'), 
     actions: [
       {
         actionId: '1',
@@ -71,7 +71,7 @@ const initialLawsuits = [
   {
     id: 5,
     lawsuitNumber: 'CASE-2025-005',
-    nextDate: new Date('2025-01-23'), // Yesterday (overdue)
+    nextDate: new Date('2025-01-23'), 
     actions: [
       {
         actionId: '1',
@@ -82,41 +82,47 @@ const initialLawsuits = [
   }
 ];
 
-let lawsuits = [...initialLawsuits];
-let lastId = initialLawsuits.length;
+class LawsuitService {
+  constructor() {
+    this.lawsuits = [...initialLawsuits];
+  }
 
-export const LawsuitService = {
   // Add a new lawsuit
-  addLawsuit: (lawsuitNumber, nextDate, selectedActions) => {
-    const lawsuit = {
-      id: ++lastId,
+  addLawsuit(lawsuitNumber, nextDate, selectedActions) {
+    const newLawsuit = {
+      id: this.lawsuits.length + 1,
       lawsuitNumber,
       nextDate,
       actions: Object.entries(selectedActions)
         .filter(([_, isSelected]) => isSelected)
-        .map(([actionId, _]) => ({
+        .map(([actionId]) => ({
           actionId,
           completed: false,
-          createdAt: new Date(),
-        })),
+          createdAt: new Date()
+        }))
     };
-    lawsuits.push(lawsuit);
-    return lawsuit;
-  },
+    this.lawsuits.push(newLawsuit);
+    return newLawsuit;
+  }
 
   // Get all lawsuits
-  getAllLawsuits: () => {
-    return [...lawsuits];
-  },
+  getAllLawsuits() {
+    return this.lawsuits;
+  }
 
   // Get a specific lawsuit
-  getLawsuit: (id) => {
-    return lawsuits.find(lawsuit => lawsuit.id === id);
-  },
+  getLawsuit(id) {
+    return this.lawsuits.find(lawsuit => lawsuit.id === id);
+  }
 
   // Clear all lawsuits (for testing)
-  clearLawsuits: () => {
-    lawsuits = [...initialLawsuits];
-    lastId = initialLawsuits.length;
+  clearLawsuits() {
+    this.lawsuits = [];
   }
-};
+}
+
+// Create a singleton instance
+const lawsuitService = new LawsuitService();
+
+// Export the singleton instance
+export { lawsuitService as LawsuitService };

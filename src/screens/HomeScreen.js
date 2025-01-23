@@ -68,17 +68,17 @@ const HomeScreen = () => {
     return true;
   };
 
-  const handleAddAction = () => {
+  const handleAddAction = async () => {
     if (!validateForm()) return;
 
     try {
-      const lawsuit = LawsuitService.addLawsuit(
+      const lawsuit = await LawsuitService.addLawsuit(
         lawsuitNumber.trim(),
         nextDate,
         selectedActions
       );
 
-      // Reset form
+      // Reset form after successful addition
       setLawsuitNumber('');
       setNextDate(new Date());
       setSelectedActions({});
@@ -89,13 +89,18 @@ const HomeScreen = () => {
         [
           {
             text: 'View All Lawsuits',
-            onPress: () => router.push('/dashboard')
+            onPress: () => router.push('dashboard'),
+            style: 'default',
           },
-          { text: 'Add Another' }
+          { 
+            text: 'Add Another',
+            style: 'cancel',
+          }
         ]
       );
     } catch (error) {
-      Alert.alert('Error', 'Failed to add lawsuit. Please try again.');
+      console.error('Error adding lawsuit:', error);
+      Alert.alert('Error', error.message || 'Failed to add lawsuit. Please try again.');
     }
   };
 
