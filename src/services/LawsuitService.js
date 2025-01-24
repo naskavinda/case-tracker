@@ -115,6 +115,36 @@ class LawsuitService {
     return this.lawsuits.find(lawsuit => lawsuit.id === id);
   }
 
+  // Complete an action in a lawsuit
+  completeAction(lawsuitId, actionId) {
+    const lawsuit = this.getLawsuit(lawsuitId);
+    if (!lawsuit) return false;
+
+    const action = lawsuit.actions.find(a => a.actionId === actionId);
+    if (!action) return false;
+
+    action.completed = true;
+    action.completedAt = new Date(); 
+    return true;
+  }
+
+  // Update action status
+  updateActionStatus(lawsuitId, actionId, completed) {
+    const lawsuit = this.getLawsuit(lawsuitId);
+    if (!lawsuit) return false;
+
+    const action = lawsuit.actions.find(a => a.actionId === actionId);
+    if (!action) return false;
+
+    action.completed = completed;
+    if (completed) {
+      action.completedAt = new Date();
+    } else {
+      delete action.completedAt;
+    }
+    return true;
+  }
+
   // Clear all lawsuits (for testing)
   clearLawsuits() {
     this.lawsuits = [];

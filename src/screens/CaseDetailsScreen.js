@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { LawsuitService } from '../services/LawsuitService';
 
-const ActionCard = ({ title, daysCount, createdDate, status }) => (
-  <View style={styles.actionCard}>
+const ActionCard = ({ title, daysCount, createdDate, status, onPress }) => (
+  <TouchableOpacity onPress={onPress} style={styles.actionCard}>
     <View style={styles.actionContent}>
       <View style={styles.actionHeader}>
         <Text style={styles.actionTitle}>{title}</Text>
@@ -18,13 +18,38 @@ const ActionCard = ({ title, daysCount, createdDate, status }) => (
       <Text style={styles.daysCount}>Days Count: {daysCount} days</Text>
       <Text style={styles.createdDate}>Created: {createdDate}</Text>
     </View>
-  </View>
+  </TouchableOpacity>
 );
 
 export default function CaseDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [caseDetails, setCaseDetails] = useState(null);
+  const [selectedAction, setSelectedAction] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const handleActionPress = (action) => {
+    if (!action.completed) {
+      setSelectedAction(action);
+      setModalVisible(true);
+    }
+  };
+
+  const handleCompleteAction = () => {
+    if (selectedAction) {
+      const success = LawsuitService.completeAction(parseInt(id), selectedAction.actionId);
+      if (success) {
+        // Refresh case details
+        const updatedCase = LawsuitService.getLawsuit(parseInt(id));
+        setCaseDetails(updatedCase);
+        Alert.alert('Success', 'Action marked as completed');
+      } else {
+        Alert.alert('Error', 'Failed to complete action');
+      }
+    }
+    setModalVisible(false);
+    setSelectedAction(null);
+  };
 
   useEffect(() => {
     try {
@@ -77,6 +102,7 @@ export default function CaseDetailsScreen() {
             daysCount={action.actionId === '1' ? 7 : 5}
             createdDate={new Date(action.createdAt).toLocaleDateString()}
             status={action.completed ? 'Completed' : 'Pending'}
+            onPress={() => handleActionPress(action)}
           />
         ))}
       </View>
@@ -102,6 +128,67 @@ export default function CaseDetailsScreen() {
           </View>
         </View>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Action Details</Text>
+            {selectedAction && (
+              <>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalLabel}>Type:</Text>
+                  <Text style={styles.modalValue}>
+                    {selectedAction.actionId === '1' ? 'Document Preparation' : 'Court Submission'}
+                  </Text>
+                </View>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalLabel}>Created:</Text>
+                  <Text style={styles.modalValue}>
+                    {new Date(selectedAction.createdAt).toLocaleDateString()}
+                  </Text>
+                </View>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalLabel}>Days Count:</Text>
+                  <Text style={styles.modalValue}>
+                    {selectedAction.actionId === '1' ? '7' : '5'} days
+                  </Text>
+                </View>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalLabel}>Status:</Text>
+                  <Text style={[
+                    styles.modalValue,
+                    { color: selectedAction.completed ? '#4CAF50' : '#FFC107' }
+                  ]}>
+                    {selectedAction.completed ? 'Completed' : 'Pending'}
+                  </Text>
+                </View>
+              </>
+            )}
+            <Text style={styles.modalQuestion}>
+              Do you want to mark this action as completed?
+            </Text>
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.button, styles.buttonCancel]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.button, styles.buttonComplete]}
+                onPress={handleCompleteAction}
+              >
+                <Text style={styles.buttonText}>Complete</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -200,5 +287,79 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 14,
     color: '#666',
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'stretch',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: '80%',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalLabel: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  modalValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalQuestion: {
+    fontSize: 16,
+    marginTop: 24,
+    marginBottom: 24,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  button: {
+    borderRadius: 8,
+    padding: 12,
+    width: '45%',
+    alignItems: 'center',
+  },
+  buttonCancel: {
+    backgroundColor: '#666',
+  },
+  buttonComplete: {
+    backgroundColor: '#4CAF50',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
