@@ -88,7 +88,7 @@ class LawsuitService {
   }
 
   // Add a new lawsuit
-  addLawsuit(lawsuitNumber, nextDate, selectedActions) {
+  addLawsuit(lawsuitNumber, nextDate, selectedActions = {}) {
     const newLawsuit = {
       id: this.lawsuits.length + 1,
       lawsuitNumber,

@@ -58,13 +58,6 @@ const HomeScreen = () => {
       Alert.alert('Error', 'Please enter a lawsuit number');
       return false;
     }
-
-    const hasSelectedActions = Object.values(selectedActions).some(isSelected => isSelected);
-    if (!hasSelectedActions) {
-      Alert.alert('Error', 'Please select at least one action');
-      return false;
-    }
-
     return true;
   };
 
@@ -100,34 +93,39 @@ const HomeScreen = () => {
       );
     } catch (error) {
       console.error('Error adding lawsuit:', error);
-      Alert.alert('Error', error.message || 'Failed to add lawsuit. Please try again.');
+      Alert.alert('Error', 'Failed to add lawsuit');
     }
   };
 
   return (
     <ScrollView style={styles.container}>
+      <Text style={styles.title}>Add New Case</Text>
+      
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Lawsuit Number</Text>
+        <Text style={styles.label}>Case Number</Text>
         <TextInput
           style={styles.input}
           value={lawsuitNumber}
           onChangeText={setLawsuitNumber}
-          placeholder="Enter lawsuit number"
+          placeholder="Enter case number"
         />
       </View>
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Next Date</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
         >
-          <Text>{nextDate.toLocaleDateString()}</Text>
+          <Text style={styles.dateButtonText}>
+            {nextDate.toLocaleDateString()}
+          </Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
             value={nextDate}
             mode="date"
+            display="default"
             onChange={handleDateChange}
             minimumDate={new Date()}
           />
@@ -135,23 +133,22 @@ const HomeScreen = () => {
       </View>
 
       <View style={styles.actionsContainer}>
-        <Text style={styles.sectionTitle}>Actions</Text>
-        {PREDEFINED_ACTIONS.map((action) => (
-          <View key={action.id} style={styles.actionItem}>
-            <CustomCheckbox
-              title={`${action.name} (${action.daysCount} days)`}
-              checked={selectedActions[action.id] || false}
-              onPress={() => toggleAction(action.id)}
-            />
-          </View>
+        <Text style={styles.label}>Actions (Optional)</Text>
+        {PREDEFINED_ACTIONS.map(action => (
+          <CustomCheckbox
+            key={action.id}
+            title={`${action.name} (${action.daysCount} days)`}
+            checked={selectedActions[action.id] || false}
+            onPress={() => toggleAction(action.id)}
+          />
         ))}
       </View>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.addButton}
         onPress={handleAddAction}
       >
-        <Text style={styles.addButtonText}>Add Action</Text>
+        <Text style={styles.addButtonText}>Add Case</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -162,6 +159,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
   },
   inputContainer: {
     marginBottom: 20,
@@ -186,17 +189,12 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'flex-start',
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  dateButtonText: {
+    fontSize: 16,
     color: '#333',
   },
   actionsContainer: {
     marginTop: 20,
-  },
-  actionItem: {
-    marginBottom: 8,
   },
   checkboxContainer: {
     flexDirection: 'row',

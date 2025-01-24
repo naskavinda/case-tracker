@@ -3,23 +3,38 @@ import { View, Text, StyleSheet, Alert, TouchableOpacity, Modal, Pressable } fro
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { LawsuitService } from '../services/LawsuitService';
 
-const ActionCard = ({ title, daysCount, createdDate, status, onPress }) => (
-  <TouchableOpacity onPress={onPress} style={styles.actionCard}>
-    <View style={styles.actionContent}>
-      <View style={styles.actionHeader}>
-        <Text style={styles.actionTitle}>{title}</Text>
-        <View style={[
-          styles.statusBadge, 
-          { backgroundColor: status === 'Completed' ? '#4CAF50' : '#FFC107' }
-        ]}>
-          <Text style={styles.statusText}>{status}</Text>
+const getCompletionDate = (createdDate, daysCount) => {
+  const date = new Date(createdDate);
+  date.setDate(date.getDate() + daysCount);
+  return date;
+};
+
+const ActionCard = ({ title, daysCount, createdDate, status, onPress }) => {
+  const completionDate = getCompletionDate(createdDate, daysCount);
+  const now = new Date();
+  const isOverdue = status !== 'Completed' && completionDate < now;
+  
+  return (
+    <TouchableOpacity onPress={onPress} style={styles.actionCard}>
+      <View style={styles.actionContent}>
+        <View style={styles.actionHeader}>
+          <Text style={styles.actionTitle}>{title}</Text>
+          <View style={[
+            styles.statusBadge, 
+            { backgroundColor: status === 'Completed' ? '#4CAF50' : isOverdue ? '#F44336' : '#FFC107' }
+          ]}>
+            <Text style={styles.statusText}>{status}</Text>
+          </View>
         </View>
+        <Text style={[styles.dueDate, isOverdue && styles.overdue]}>
+          Due: {completionDate.toLocaleDateString()}
+          {isOverdue && ' (Overdue)'}
+        </Text>
+        <Text style={styles.createdDate}>Created: {new Date(createdDate).toLocaleDateString()}</Text>
       </View>
-      <Text style={styles.daysCount}>Days Count: {daysCount} days</Text>
-      <Text style={styles.createdDate}>Created: {createdDate}</Text>
-    </View>
-  </TouchableOpacity>
-);
+    </TouchableOpacity>
+  );
+};
 
 export default function CaseDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -100,7 +115,7 @@ export default function CaseDetailsScreen() {
             key={action.actionId}
             title={action.actionId === '1' ? 'Document Preparation' : 'Court Submission'}
             daysCount={action.actionId === '1' ? 7 : 5}
-            createdDate={new Date(action.createdAt).toLocaleDateString()}
+            createdDate={action.createdAt}
             status={action.completed ? 'Completed' : 'Pending'}
             onPress={() => handleActionPress(action)}
           />
@@ -153,9 +168,12 @@ export default function CaseDetailsScreen() {
                   </Text>
                 </View>
                 <View style={styles.modalContent}>
-                  <Text style={styles.modalLabel}>Days Count:</Text>
+                  <Text style={styles.modalLabel}>Due Date:</Text>
                   <Text style={styles.modalValue}>
-                    {selectedAction.actionId === '1' ? '7' : '5'} days
+                    {getCompletionDate(
+                      selectedAction.createdAt,
+                      selectedAction.actionId === '1' ? 7 : 5
+                    ).toLocaleDateString()}
                   </Text>
                 </View>
                 <View style={styles.modalContent}>
@@ -255,10 +273,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  daysCount: {
+  dueDate: {
     fontSize: 14,
     color: '#666',
     marginBottom: 4,
+  },
+  overdue: {
+    color: '#F44336',
+    fontWeight: 'bold',
   },
   createdDate: {
     fontSize: 14,
