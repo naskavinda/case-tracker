@@ -42,15 +42,6 @@ export default function CaseDetailsScreen() {
     }
   }, [id]);
 
-  useEffect(() => {
-    if (caseDetails) {
-      // Update the header title when case details are loaded
-      router.setParams({
-        title: `Case #${caseDetails.lawsuitNumber}`
-      });
-    }
-  }, [caseDetails]);
-
   if (!caseDetails) {
     return (
       <View style={styles.container}>
@@ -70,8 +61,11 @@ export default function CaseDetailsScreen() {
           headerTintColor: '#fff',
         }}
       />
-      <View style={styles.section}>
-        <Text style={styles.nextDate}>Next Date: {new Date(caseDetails.nextDate).toLocaleDateString()}</Text>
+      <View style={styles.header}>
+        <Text style={styles.caseNumber}>Case #{caseDetails.lawsuitNumber}</Text>
+        <Text style={styles.nextDate}>
+          Next Date: {new Date(caseDetails.nextDate).toLocaleDateString()}
+        </Text>
       </View>
 
       <View style={styles.section}>
@@ -118,12 +112,22 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#f5f5f5',
   },
-  section: {
+  header: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  caseNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
   },
   nextDate: {
     fontSize: 16,
     color: '#666',
+  },
+  section: {
     marginBottom: 24,
   },
   sectionTitle: {
